@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div id="app">
+    <el-page-header @back="goBack" content="详情页面">
+    </el-page-header>
+
+    <el-descriptions title="景点信息" :column="2">
+        <el-descriptions-item label="景点名称">
+            {{this.place.name}}
+        </el-descriptions-item>
+
+        <el-descriptions-item label="金额">
+            {{this.place.money}}
+        </el-descriptions-item>
+
+        <el-descriptions-item label="起始日期">
+            {{this.place.startline}}
+        </el-descriptions-item>
+
+        <el-descriptions-item label="结束日期">
+            {{this.place.deadline}}
+        </el-descriptions-item>
+
+        <el-descriptions-item label="详细介绍">
+            {{this.place.resource}}
+        </el-descriptions-item>
+    </el-descriptions>
+
+
+    <el-button type="primary" @click="add()">发起订单</el-button>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="./vue.js"></script>
+<script src="js/index.js"></script>
+<link rel="stylesheet" href="js/theme-chalk/index.css"/>
+
+<script>
+    new Vue({
+        el:"#app",
+        created(){
+            this.token =  localStorage.getItem('token')
+            this.user = JSON.parse(decodeURIComponent(escape(window.atob(this.token.split('.')[1]))))
+            this.id = localStorage.getItem('key');
+            if(this.token ==null){
+                alert("请先登录")
+                location.href = `http://localhost:8080/login.html`
+            }
+        },
+
+        mounted(){
+            let that = this
+            axios({
+                method:"get",
+                url:"http://localhost:8080/place/show",
+                params: {
+                    id:8
+                },
+                headers: {
+                    'Content-Type': "application/json;charset=UTF-8",
+                    'token': this.token,
+                }
+            }).then(function (resp){
+                that.place = resp.data.data
+            })
+        },
+        data() {
+            return {
+                place:{
+                    id:'',
+                    name:'',
+                    resource: '',
+                    startline: '',
+                    deadline:''
+                },
+                user: {
+                    id:'',
+                    username:'',
+                    account:'',
+                    password:'',
+                    money:''
+                },
+            }
+        },
+        methods:{
+            goBack() {
+                location.href = `http://localhost:8080/2.html`
+            },
+            add(){
+                axios({
+                    method:"post",
+                    url:"http://localhost:8080/shop/add",
+                    headers: {
+                        'Content-Type': "application/json;charset=UTF-8",
+                        'token': this.token,
+                    },
+                    data:{
+                        num:this.place.id,
+                        user:{
+                            id:this.user.id
+                        }
+                    }
+                }).then(function (value) {
+                    console.log(value);
+                    console.log(value.data);
+                    if (value.data.code == 1) {
+                        alert("添加成功")
+                    }else{
+                        alert("添加失败")
+                        console.log(value.data);
+
+                    }
+                }).catch(function (reason) {
+                    console.log(reason);
+                })
+
+            }
+        }
+    })
+</script>
+
+</body>
+</html>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.mapper.plamap">
+
+    <update id="change">
+        update place
+        <set>
+        <if test="name != null">name = #{name},</if>
+        <if test="resource != null">resource = #{resource},</if>
+        <if test="money != null and money != ''">money = #{money},</if>
+        <if test="startline != null">startline = #{startline},</if>
+        <if test="deadline != null">deadline = #{deadline},</if>
+        </set>
+        where id =#{id}
+    </update>
+
+
+
+
+
+    <select id="list" resultType="com.example.demo.pojo.place">
+        select *
+        from place
+        <where>
+            <if test="name != null and name != ''">
+                name like concat('%', #{name}, '%')
+            </if>
+        </where>
+    </select>
+
+    <select id="find" resultType="com.example.demo.pojo.place">
+        select  name, resource from place where name = #{name} or resource = #{resource}
+    </select>
+
+</mapper>

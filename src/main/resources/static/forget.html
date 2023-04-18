@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .login{
+            text-align: center;
+            margin: 0 auto;
+            width: 500px;
+            height: 320px;
+            background-color: rgba(87, 86, 86, 0.2);
+            border-radius: 25px;
+            box-shadow: 5px 2px 35px -7px #ff9a9e;
+        }
+        .login_form{
+            padding: 20px;
+        }
+    </style>
+</head>
+<body background="pict/1680280853689.jpg"
+      style="background-repeat: no-repeat;
+      background-attachment: fixed;
+      background-size: 100% 100%">
+<div id="app">
+    <div class="login">
+        <el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm">
+            <el-row>找回密码</el-row>
+            <div class="login_form">
+                <el-form-item label="账号" prop="account">
+                    <el-input type="text" v-model="ruleForm.account" autocomplete="off"></el-input>
+                </el-form-item>
+                <el-form-item label="密码" prop="password">
+                    <el-input type="password" v-model="ruleForm.password" autocomplete="off" show-password></el-input>
+                </el-form-item>
+                <el-form-item label="确认密码" prop="password">
+                    <el-input type="password" v-model="ruleForm.password1" autocomplete="off" show-password></el-input>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" @click="submitForm('ruleForm')">提交</el-button>
+                </el-form-item>
+            </div>
+        </el-form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="./vue.js"></script>
+<script src="js/index.js"></script>
+<link rel="stylesheet" href="js/theme-chalk/index.css"/>
+
+<script>
+    new Vue({
+        el:"#app",
+        data() {
+            var validatePass = (rule, value, callback) => {
+                var acckey = /^1[3456789]\d{9}$/;
+                if (value === '') {
+                    callback(new Error('请输入账号'));
+                }else if(!acckey.test(value)){
+                    callback(new Error('请输入正确格式！（手机号）'));
+                }else{
+                    callback();
+                }
+            };
+
+            var validatePass2 = (rule, value, callback) => {
+                var paskey = /^[a-zA-Z]\w{5,17}$/;
+                if (value === '' ) {
+                    callback(new Error('请输入密码'));
+                }else if(!paskey.test(value)){
+                    callback(new Error('请输入正确格式！（以字母开头，长度在6~18之间，只能包含字符、数字和下划线。）'));
+                }else {
+                    callback();
+                }
+            };
+            var validatePass3 = (rule, value, callback) => {
+                if (value === '') {
+                    callback(new Error('请再次输入密码'));
+                } else if (value !== this.ruleForm.pass) {
+                    callback(new Error('两次输入密码不一致!'));
+                } else {
+                    callback();
+                }
+            };
+            return {
+                ruleForm: {
+                    account: '',
+                    password: '',
+                },
+                rules: {
+                    account: [
+                        { validator: validatePass, trigger: 'blur' }
+                    ],
+                    password: [
+                        { validator: validatePass2, trigger: 'blur' }
+                    ],
+                    password1: [
+                        { validator: validatePass3, trigger: 'blur' }
+                    ],
+                }
+            };
+        },
+        methods: {
+            submitForm(ruleForm) {
+                this.$refs[ruleForm].validate((valid) => {
+                    if (valid) {
+                        let user = {
+                            'account':this.ruleForm.account,
+                            'password':this.ruleForm.password,
+                        }
+                        axios({
+                            method: "post",
+                            url: "http://localhost:8080/user/forget",
+                            dataType:'json',
+                            data: user,
+                            headers: {
+                                'Content-Type': 'application/json;charset=UTF-8'
+                            }
+                        }).then(function (value){
+                            console.log(value);
+                            console.log(value.data);
+                            if(value.data.msg == 'succ'){
+                                alert("修改密码成功")
+                                location.href="http://localhost:8080/login.html";
+                            }else{
+                                alert(value.data)
+                            }
+                        }).catch(function (reason){
+                            console.log(reason);
+                        })
+                    } else {
+                        console.log('error submit!!');
+                        return false;
+                    }
+                });
+            },
+        }
+    })
+</script>
+</body>
+</html>

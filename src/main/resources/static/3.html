@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>订单界面</title>
+  <style>
+      body{
+        margin: 0;
+      }
+
+    body > .el-container {
+      margin-bottom: 40px;
+    }
+
+    .el-carousel__item h3 {
+      color: #475669;
+      font-size: 18px;
+      opacity: 0.75;
+      line-height: 300px;
+      margin: 0;
+    }
+
+    .user-avator img {
+      display: block;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <el-container>
+      <el-header>
+        <el-menu
+                class="el-menu-demo"
+                mode="horizontal"
+                @select="handleSelect"
+                background-color="#545c64"
+                text-color="#fff"
+                active-text-color="#ffd04b"
+                default-active="toIndex" router>
+          <el-menu-item v-for="(item, index) in itemList" :index="item.path" :key="index" @click = handoff(index)>
+            <span  slot="title">{{ item.title }}</span>
+          </el-menu-item>
+        </el-menu>
+      </el-header>
+    </el-container>
+
+    <el-row>当前余额:{{this.user.money}}</el-row>
+
+    <el-row>充值</el-row>
+    <template>
+      <el-input-number v-model="num" @change="handleChange()" :min="1" :max="1000" label="充值金额">
+
+      </el-input-number>
+    </template>
+    <el-button type="primary" @click="earn(num)">充值</el-button>
+
+    <el-button type="primary" @click="modify(user)">支付</el-button>
+
+    <template>
+      <el-table :data="list">
+        <el-table-column prop="id" label="编号"  align-="center" width="140">
+        </el-table-column>
+
+        <el-table-column prop="placeid" label="景点id" align-="center" width="140">
+        </el-table-column>
+
+        <el-table-column prop="createtime" label="订单创建时间" align-="center" width="140">
+        </el-table-column>
+
+      </el-table>
+    </template>
+    <el-button @click="drawer = true" type="primary" style="margin-left: 16px;">
+      订单
+    </el-button>
+
+    <el-drawer
+            title="订单"
+            :visible.sync="drawer"
+            :with-header="false">
+      <span>
+        <el-descriptions title="订单" :data="shop">
+      <el-descriptions-item label="订单id">
+          {{this.shop.id}}
+      </el-descriptions-item>
+
+      <el-descriptions-item label="用户名">
+        {{this.user.name}}
+      </el-descriptions-item>
+
+      <el-descriptions-item label="景点id">
+        {{this.shop.placeid}}
+      </el-descriptions-item>
+
+      <el-descriptions-item label="用户id">
+        {{this.shop.userid}}
+      </el-descriptions-item>
+
+      <el-descriptions-item label="金额">
+        {{this.shop.money}}
+      </el-descriptions-item>
+    </el-descriptions>
+      </span>
+    </el-drawer>
+
+  </div>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="./vue.js"></script>
+    <script src="js/index.js"></script>
+    <link rel="stylesheet" href="js/theme-chalk/index.css"/>
+    <script>
+      new Vue({
+        el:"#app",
+        name: 'block',
+        created(){
+          this.token =  localStorage.getItem('token')
+          this.u = JSON.parse(decodeURIComponent(escape(window.atob(this.token.split('.')[1]))))
+          if(this.token ==null){
+            alert("请先登录")
+            location.href = `http://localhost:8080/login.html`
+          }
+        },
+        mounted(){
+          let that = this
+          axios({
+            method:"post",
+            url:"http://localhost:8080/shop/show",
+            data:this.u,
+            dataType: 'json',
+            headers: {
+              'Content-Type': "application/json;charset=UTF-8",
+              'token': this.token,
+            }
+          }).then(function (resp){
+            console.log(resp.data.data)
+            if(resp.data.data == "当前没有订单"){
+              that.f = 1;
+            }else{
+              that.shop = resp.data.data
+            }
+          })
+
+          axios({
+            method: "post",
+            url: "http://localhost:8080/user/user1",
+            data:this.u,
+            dataType: 'json',
+            headers: {
+              'Content-Type': "application/json;charset=UTF-8",
+              'token': this.token,
+            }
+          }).then(function (resp){
+            console.log(resp.data.data)
+              that.user = resp.data.data
+          })
+
+          axios({
+            method: "get",
+            url: "http://localhost:8080/shop/payed",
+            params:this.u,
+            headers: {
+              'Content-Type': "application/json;charset=UTF-8",
+              'token': this.token,
+            }
+          }).then(function (resp){
+            console.log(resp.data.data)
+            that.list = resp.data.data
+          })
+        },
+        methods: {
+          handleSelect(path){
+            this.$router.push({
+              path: path
+            });
+           },
+          handoff(a){
+            location.href = `http://localhost:8080/${a}.html`
+          },
+          earn(){
+            if(this.num != null){
+              axios({
+                method: "post",
+                url: "http://localhost:8080/user/earn",
+                data: {
+                  num:this.num,
+                  user:{
+                    id:this.user.id
+                  },
+                },
+                dataType: 'json',
+                headers: {
+                  'Content-Type': "application/json;charset=UTF-8",
+                  'token': this.token,
+                }
+              }).then(function (resp){
+                alert("充值成功")
+              })
+            }
+          },
+          linkTo() {
+            let activeIndex = this.$refs.carousel.activeIndex
+            window.open(this.imgList[activeIndex].link, "_blank");
+          },
+
+          handleChange(value) {
+            console.log(value);
+          },
+          modify(shop) {
+            console.log(this.f)
+            console.log(this)
+            if (this.f == 1) {
+                alert("当前没有订单")
+            }else{
+              axios({
+                method: "post",
+                url: "http://localhost:8080/shop/pay",
+                dataType: 'json',
+                data: this.shop,
+                headers: {
+                  'Content-Type': "application/json;charset=UTF-8",
+                  'token': this.token,
+                }
+              }).then(function (resp) {
+                if (resp.data.msg == 'succ') {
+                  alert("支付成功")
+                } else {
+                  alert("支付失败，余额不足")
+                }
+              }).catch(function (reason) {
+                alert("操作失败")
+                console.log(reason);
+              })
+            }
+          }
+        },
+
+        data (){
+          return {
+            activeIndex: '1',
+            activeIndex2: '1',
+            num: 1,
+            shop:{
+              id:'',
+              userid: '',
+              placeid:'',
+              money:'',
+              form:'',
+              createdtime:'',
+            },
+            list:[{
+
+            }],
+            drawer: false,
+            itemList: [
+              { path: '/Home', title: '首页' },
+              { path: '/test1', title: '我的信息' },
+              { path: '/test2', title: '更多景点' },
+              { path: '/test3', title: '订单' },
+            ],
+            f:'',
+            user: {
+              id:'',
+              username:'',
+              account:'',
+              password:'',
+              money:''
+            },
+          };
+        }
+      })
+    </script>
+
+
+</body>
+</html>
